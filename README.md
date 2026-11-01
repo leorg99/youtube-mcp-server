@@ -456,3 +456,11 @@ Use `includeReplies: true` for the embedded reply subset, or `completeReplies: t
 Inspect each thread's `replyCoverage`: `available` is the provider's reported count, `returned` counts unique replies, `complete` confirms full observed coverage, and `truncated` indicates a local budget or pagination guard stopped collection. Counts may change while YouTube comments are being edited. Missing IDs or early provider termination do not establish complete coverage. Reduce the top-level `maxResults` to reserve more of the shared budget for each thread; `pageToken` continues top-level threads, not an incomplete reply list.
 
 Research `source` metadata includes `captionRequestedLanguage`, `captionTrackLanguage`, `captionLanguage`, `captionOrigin` (`manual`, `youtube_asr`, or `translated`) and `captionSourceOrigin`. Unknown provenance is `null`.
+
+### Tunnel session lifecycle and newest uploads
+
+`MCP_SESSION_MODE=stateless` enables request-scoped HTTP transports for read-only
+connectors that do not reuse sessions. Stateful mode remains the default.
+`get-channel-uploads` retrieves a known channel's uploads playlist directly,
+without search. See [session lifecycle and uploads](docs/SESSION_LIFECYCLE.md)
+for pagination, diagnostics, error semantics and transport limitations.

@@ -100,9 +100,9 @@ export class YouTubeService {
 
   requireApiKey(): void {
     if (!this.hasApiKey) {
-      throw new Error(
+      throw Object.assign(new Error(
         'This tool requires YOUTUBE_API_KEY. Transcript research tools work without an API key.',
-      );
+      ), { code: 'API_KEY_REQUIRED' });
     }
   }
 
@@ -215,9 +215,45 @@ export class YouTubeService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error searching videos:', error);
+      // Tool handlers format safe status/reason errors; never log Gaxios request credentials.
       throw error;
     }
+  }
+
+  async getChannelUploads(channelId: string, maxResults = 10, pageToken?: string) {
+    this.requireApiKey();
+    if (!/^UC[A-Za-z0-9_-]{22}$/.test(channelId)) throw new Error('Invalid channel ID.');
+    if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 50) {
+      throw new Error('maxResults must be an integer between 1 and 50.');
+    }
+    const requestOptions = { timeout: 10_000, retry: false };
+    const channels = await this.youtube.channels.list({ part: ['contentDetails'], id: [channelId] }, requestOptions);
+    const playlistId = channels.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!playlistId) {
+      throw Object.assign(new Error('Channel not found or uploads playlist unavailable.'), { code: 'CHANNEL_NOT_FOUND' });
+    }
+    const response = await this.youtube.playlistItems.list({
+      part: ['snippet', 'contentDetails'], playlistId, maxResults, pageToken,
+    }, requestOptions);
+    return {
+      channelId, uploadsPlaylistId: playlistId, order: 'uploads-playlist',
+      nextPageToken: response.data.nextPageToken ?? null,
+      items: (response.data.items ?? []).map((item) => {
+        const snippet = item.snippet;
+        const videoId = item.contentDetails?.videoId ?? snippet?.resourceId?.videoId ?? null;
+        return {
+          playlistItemId: item.id ?? null, videoId,
+          title: snippet?.title ?? null, description: snippet?.description ?? null,
+          // Playlist insertion time is not necessarily the video's publication time.
+          publishedAt: item.contentDetails?.videoPublishedAt ?? null,
+          playlistAddedAt: snippet?.publishedAt ?? null,
+          channelId: snippet?.videoOwnerChannelId ?? snippet?.channelId ?? channelId,
+          channelTitle: snippet?.videoOwnerChannelTitle ?? snippet?.channelTitle ?? null,
+          thumbnails: snippet?.thumbnails ?? {},
+          videoUrl: videoId ? `https://www.youtube.com/watch?v=${videoId}` : null,
+        };
+      }),
+    };
   }
 
   async getVideoDetails(videoId: string): Promise<youtube_v3.Schema$VideoListResponse> {
@@ -229,7 +265,6 @@ export class YouTubeService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error getting video details:', error);
       throw error;
     }
   }
@@ -243,7 +278,6 @@ export class YouTubeService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error getting channel details:', error);
       throw error;
     }
   }
@@ -415,7 +449,6 @@ export class YouTubeService {
 
       return result;
     } catch (error) {
-      console.error('Error getting comments:', error);
       throw error;
     }
   }

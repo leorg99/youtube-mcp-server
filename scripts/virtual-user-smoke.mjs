@@ -28,7 +28,7 @@ try {
   await client.connect(transport);
 
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 14);
+  assert.equal(tools.length, 15);
   assert.ok(tools.some(({ name }) => name === 'research-video'));
   assert.ok(tools.some(({ name }) => name === 'research-videos'));
 

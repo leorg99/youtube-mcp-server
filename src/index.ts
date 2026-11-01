@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { dataApiError } from './api-errors.js';
 import { YouTubeService } from './youtube-service.js';
 import { TranscriptOptions } from './types/youtube-types.js';
 import { createTimestampUrl, extractVideoId } from './youtube-url.js';
@@ -316,6 +317,23 @@ export default function createServer({ config }: { config: z.infer<typeof config
     }
   );
 
+  server.tool(
+    'get-channel-uploads',
+    '[Requires YOUTUBE_API_KEY] Retrieve public channel uploads directly through the uploads playlist, without search. Preserves newest-first playlist order and nextPageToken continuation. Includes Shorts and archived live streams when present in that playlist.',
+    {
+      channelId: z.string().regex(/^UC[A-Za-z0-9_-]{22}$/),
+      maxResults: z.number().int().min(1).max(50).optional(),
+      pageToken: z.string().min(1).optional(),
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    async ({ channelId, maxResults = 10, pageToken }) => {
+      try {
+        const result = await youtubeService.getChannelUploads(channelId, maxResults, pageToken);
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+      } catch (error) { return dataApiError(error); }
+    },
+  );
+
   // Define tools
   server.tool(
     'search-videos',
@@ -357,13 +375,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error searching videos: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -400,13 +412,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error fetching comments: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -605,13 +611,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error fetching video statistics: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -655,13 +655,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error fetching channel statistics: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -700,13 +694,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error comparing videos: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -748,13 +736,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error fetching trending videos: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -786,13 +768,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error fetching video categories: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );
@@ -890,13 +866,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
           }]
         };
       } catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Error analyzing channel videos: ${error}`
-          }],
-          isError: true
-        };
+        return dataApiError(error);
       }
     }
   );

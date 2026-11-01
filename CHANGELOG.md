@@ -64,3 +64,11 @@ All notable changes to this project are documented here. This project follows [S
 ### Security
 
 - Remote MCP deployments can require constant-time bearer-token authentication.
+
+## 2.0.1-lab.1
+
+- Add stateless HTTP mode for callers that create a new session per invocation,
+  with bounded concurrent work, deterministic cleanup, and lifecycle telemetry.
+- Fix request IDs and diagnostic data on HTTP capacity errors; preserve safe
+  YouTube API status/reason details in tool errors.
+- Add native get-channel-uploads with uploads-playlist pagination and no search.
