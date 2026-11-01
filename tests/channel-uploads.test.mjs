@@ -57,3 +57,23 @@ test('API errors preserve status and reason while redacting request secrets', ()
   assert.ok(!JSON.stringify(result).includes('secret-key'));
   assert.equal(JSON.parse(dataApiError({ response: { status: 401 } }).content[0].text).error.category, 'authentication');
 });
+test('Google HTTP 400 API_KEY_INVALID is authentication, not a transient argument error', () => {
+  const result = dataApiError({ response: { status: 400, data: { error: {
+    status: 'INVALID_ARGUMENT', errors: [{ reason: 'badRequest' }],
+    details: [{ reason: 'API_KEY_INVALID', metadata: { key: 'secret-key' } }],
+  } } } });
+  const error = JSON.parse(result.content[0].text).error;
+  assert.equal(error.category, 'authentication');
+  assert.equal(error.code, 'INVALID_ARGUMENT');
+  assert.ok(error.message.includes('API_KEY_INVALID'));
+  assert.equal(error.retryable, false);
+  assert.ok(!JSON.stringify(result).includes('secret-key'));
+});
+test('malformed API arguments and missing resources retain distinct categories', () => {
+  for (const [status, category] of [[400, 'invalid_arguments'], [404, 'not_found']]) {
+    const error = JSON.parse(dataApiError({ response: { status } }).content[0].text).error;
+    assert.equal(error.category, category);
+    assert.equal(error.httpStatus, status);
+    assert.equal(error.retryable, false);
+  }
+});
