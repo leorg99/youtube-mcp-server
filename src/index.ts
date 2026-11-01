@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { SERVER_VERSION } from './version.js';
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { dataApiError } from './api-errors.js';
@@ -155,7 +156,7 @@ export default function createServer({ config }: { config: z.infer<typeof config
   // Create the MCP server
   const server = new McpServer({
     name: 'YouTube Research MCP',
-    version: '2.0.1-lab.2'
+    version: SERVER_VERSION
   });
 
   // Define resources
@@ -326,11 +327,13 @@ export default function createServer({ config }: { config: z.infer<typeof config
       pageToken: z.string().min(1).optional(),
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    async ({ channelId, maxResults = 10, pageToken }) => {
+    async ({ channelId, maxResults = 10, pageToken }, extra) => {
       try {
-        const result = await youtubeService.getChannelUploads(channelId, maxResults, pageToken);
-        return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
-      } catch (error) { return dataApiError(error); }
+        const result = await youtubeService.getChannelUploads(channelId, maxResults, pageToken, extra.signal);
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: { ...result } };
+      } catch (error) {
+        return dataApiError(error);
+      }
     },
   );
 

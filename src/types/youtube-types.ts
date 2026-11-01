@@ -1,3 +1,5 @@
+import type { youtube_v3 } from 'googleapis';
+
 export interface TranscriptSegment {
   text: string;
   duration: number;
@@ -105,4 +107,25 @@ export class TranscriptError extends Error {
     this.options = params.options;
     this.originalError = params.originalError;
   }
+}
+
+export interface ChannelUpload {
+  playlistItemId: string | null;
+  videoId: string | null;
+  title: string | null;
+  description: string | null;
+  publishedAt: string | null;
+  playlistAddedAt: string | null;
+  channelId: string;
+  channelTitle: string | null;
+  thumbnails: youtube_v3.Schema$ThumbnailDetails;
+  videoUrl: string | null;
+}
+
+export interface ChannelUploadsResult {
+  channelId: string;
+  uploadsPlaylistId: string;
+  order: 'uploads-playlist';
+  nextPageToken: string | null;
+  items: ChannelUpload[];
 }

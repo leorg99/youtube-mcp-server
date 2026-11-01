@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { SERVER_VERSION } from '../dist/version.js';
 
 async function readJson(path) {
   return JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
@@ -15,6 +16,7 @@ test('distribution manifests describe the same release', async () => {
 
   assert.equal(mcpbManifest.compatibility.runtimes.node, packageJson.engines.node);
   assert.equal(registryManifest.version, packageJson.version);
+  assert.equal(SERVER_VERSION, packageJson.version);
   assert.equal(mcpbManifest.version, packageJson.version);
   assert.equal(registryManifest.name, packageJson.mcpName);
   assert.equal(mcpbManifest.display_name, registryManifest.title);
