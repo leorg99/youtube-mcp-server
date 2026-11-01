@@ -24,7 +24,7 @@ failure and shutdown release state. Expiry excludes requests still in progress.
 Concurrent initializations reserve capacity before asynchronous setup.
 
 `GET /mcp/metrics` uses the same bearer authentication as `/mcp` and reports mode,
-active sessions/requests, pending initialization reservations, limits and lifecycle
+active sessions, temporary contexts, HTTP requests, provider requests, pending initializations, limits and lifecycle
 counters. JSON logs report creation, reuse, closure, expiry, rejection and
 incomplete HTTP responses, including termination reason and active counts.
 Session identifiers and initialization client metadata are hashed. Client
@@ -57,3 +57,29 @@ and statistics sequence.
 Run `npm test` for protocol, lifecycle, admission, errors and mocked Data API
 coverage. Live acceptance additionally requires a hosted connector call and
 checking metrics before/after more than 20 sequential invocations.
+
+### Admission and shutdown guarantees
+
+Prefer one MCP message per HTTP request. Protocol 2025-03-26 retains batch
+support. Stateless batches reserve one permit per provider request before dispatch;
+a batch exceeding available capacity is rejected in full, with correlated
+capacity responses for requests and no responses for notifications. Permits are
+held until the entire batch completes. Protocols 2025-06-18 and later reject
+batches with HTTP 400 / JSON-RPC -32600 before dispatch.
+Initialization, notifications and discovery do not consume provider permits.
+Provider permits are released after work completes, even if SDK cleanup fails;
+cleanup attempts the underlying transport as a fallback and records failures.
+Closure counters increase only after cleanup succeeds.
+
+On SIGTERM/SIGINT, the listener stops accepting new connections and active work
+can drain for `SHUTDOWN_GRACE_MS` (default 10000 ms). Idle contexts close promptly.
+At the deadline, all remaining contexts close, handler signals are aborted, HTTP
+connections are destroyed, and the process exits even if a provider ignores
+cancellation. Set the grace interval below the container termination grace.
+Uploads forward the handler signal to both API requests, each with a 10-second
+timeout and no automatic retries. Known transient network failures are marked
+retryable; this reports retry policy without silently repeating requests.
+
+`npm run format:check` checks the lifecycle/error modules and their tests without
+reformatting unrelated upstream files. CI runs these checks and tests the packed
+archive with a clean production dependency install in addition to source tests.

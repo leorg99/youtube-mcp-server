@@ -165,7 +165,7 @@ codex mcp add youtube-research \
   --bearer-token-env-var YOUTUBE_MCP_TOKEN
 ```
 
-`/health` remains public for container health checks. MCP requests return `401` when authentication is enabled and the bearer token is missing or invalid. Idle sessions are removed automatically, and `MAX_SESSIONS` bounds memory use.
+`/health` remains public for container health checks. MCP requests return `401` when authentication is enabled and the bearer token is missing or invalid. In the default stateful mode, idle sessions expire and `MAX_SESSIONS` bounds retained sessions. In stateless mode it bounds concurrent provider requests; completed requests retain no session.
 
 ## Best first tool
 
@@ -255,6 +255,7 @@ releases run the complete npm, MCP Registry, MCPB, and Smithery delivery pipelin
 #### Basic Tools
 - `research-video` - Get citation-ready transcript evidence from a URL or video ID without an API key
 - `research-videos` - Compare timestamp-linked evidence across 2–5 videos without an API key
+- `get-channel-uploads` - Fetch a known channel’s newest uploads and page tokens through its uploads playlist, without search (requires `YOUTUBE_API_KEY`)
 - `search-videos` - Search for YouTube videos with advanced filtering options
 - `get-video-comments` - Get comments for a specific video
 - `get-video-transcript` - Get transcript for a specific video with optional language
@@ -262,7 +263,7 @@ releases run the complete npm, MCP Registry, MCPB, and Smithery delivery pipelin
 - `get-key-moments` - Extract key moments with timestamps from a video transcript for easier navigation
 - `get-segmented-transcript` - Divide a video transcript into segments for easier analysis
 
-Tools requiring `YOUTUBE_API_KEY` are search, comments, statistics, discovery, and channel analysis. `enhanced-transcript` needs the key only when `includeMetadata` is `true`.
+Tools requiring `YOUTUBE_API_KEY` are search, uploads, comments, statistics, discovery, and channel analysis. `enhanced-transcript` needs the key only when `includeMetadata` is `true`.
 
 #### Statistical Tools
 - `get-video-stats` - Get statistical information for a specific video

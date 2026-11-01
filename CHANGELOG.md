@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
+## 2.0.1-lab.3
+
+- Reserve admission capacity for every provider call in legacy JSON-RPC batches; reject batches for newer protocol versions.
+- Release provider capacity independently of SDK cleanup; log cleanup failures and close the transport directly when necessary.
+- Track all active contexts and drain HTTP requests for a bounded interval on shutdown, including uncooperative providers.
+- Forward cancellation to native uploads requests, classify transient network failures as retryable, and handle unknown provider error shapes safely.
+- Expose active provider/context counts and structured errors; add fault-injection tests and packed-runtime CI coverage.
+- Centralize runtime version metadata and check formatting of the maintained lifecycle modules and tests.
+
+## 2.0.1-lab.2
+
+- Classify Google HTTP 400 API-key rejection as authentication failure.
+
 ## [2.0.0] - 2026-10-11
 
 ### Added

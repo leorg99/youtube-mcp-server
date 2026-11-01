@@ -27,7 +27,18 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      - run: npm run format:check
       - run: npm test
+      - name: Test the packed runtime with production dependencies
+        run: |
+          archive=$(npm pack --ignore-scripts --silent)
+          runtime=$(mktemp -d)
+          npm install --prefix "$runtime" --ignore-scripts --omit=dev --no-audit --no-fund "./$archive"
+          package="$runtime/node_modules/@coyasong/youtube-mcp-server"
+          cp -R tests "$package/tests"
+          cd "$package"
+          rm tests/metadata.test.mjs
+          node --test tests/*.test.mjs
       - run: npm audit --audit-level=high
 
   bundle:
